@@ -6,6 +6,7 @@
 #
 import numpy as np
 import pandas as pd
+import csv
 #from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 
@@ -15,18 +16,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GRU, Dense
 from tensorflow.keras.optimizers import Adam
 import mlnext # https://pypi.org/project/mlnext-framework/
-
-#numpy: For handling numerical data and array manipulations.
-#pandas: For data manipulation and reading datasets (CSV files).
-#MinMaxScaler: For normalizing the dataset.
-#tensorflow.keras.models and tensorflow.keras.layers: For building and training the GRU model.
-#Adam: An optimization algorithm used during training.
-df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
-#df["Temperature_bis"] = df["Temperature"] - 0.5
-#print(df.head())
-#pd.read_csv(): Reads a CSV file into a pandas DataFrame. Here, we are assuming that the dataset has a
-#               'Date' column which is set as the index of the DataFrame.
-#date_parser=True: Ensures that pandas parses the 'Date' column as datetime.
+# Opening input data
+df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
 
 #Preprocessing the Data
 #
@@ -35,6 +26,8 @@ df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], inde
 """
 
 https://medium.com/data-science/how-to-reshape-data-and-do-regression-for-time-series-using-lstm-133dad96cd00#id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6IjgyMWYzYmM2NmYwNzUxZjc4NDA2MDY3OTliMWFkZjllOWZiNjBkZmIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTYxNTcxODc3ODE2MTU1ODcyMzIiLCJoZCI6Im5vYWEuZ292IiwiZW1haWwiOiJtYW1vdWRvdS5iYUBub2FhLmdvdiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYmYiOjE3NDM0MjUwOTQsIm5hbWUiOiJNYW1vdWRvdSBCYSAtIE5PQUEgRmVkZXJhbCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJY2FsV1JldUZ5TXNXVmp3QkhVRlJYT1RqR0RBeTdzVVJfZ2VBNmxVU1RrOVM3dFEwej1zOTYtYyIsImdpdmVuX25hbWUiOiJNYW1vdWRvdSIsImZhbWlseV9uYW1lIjoiQmEgLSBOT0FBIEZlZGVyYWwiLCJpYXQiOjE3NDM0MjUzOTQsImV4cCI6MTc0MzQyODk5NCwianRpIjoiYzA4OTE0OTgyOWU3ZjQ4ODQ5NzA1NDkzZGUxNzRjNzFjYWI5ZDdhMSJ9.NNfCSi2tfyn5red-TXPbzbFZjwrGlv2XdLNUdNEIE_TOSd6ZDvV6uzb9SteB-GRxrGqrV36boSTmWuKp9tNepDb2Yp16jWvqR6NmPQ3CRnLjkK4DGFthSvNQPf_7dEgsPqMhHJzgyRzWyLqGccaaafPhBLLjeq766GquOtnpao6Q8To3CxPuz_eqyKJhz1zpIcIrhoiRn6a2PAJ17r3fOL3auAsg6QNM15N0XGaokj54FOS4HY_nW53x_Z5PXw6gAe8V4CuETo5TCLNNEcOWCzjD_5PHbppGhUUr3CSEWpSivMQbDBa7ICORXO5VGYnr3jy83dXBJNEPBx5TwlXnvw"""
+#
+# Custom loss functions
 #
 def lstm_gru_data_transform(x_data, y_data, num_steps=100):
     """ Changes data to the format for LSTM training
@@ -124,12 +117,10 @@ def custom_loss_with_dilation(y_true, y_pred, dilation_rate=2):
 
 #
 #Splitting: train set 80% and test data 20%
-#
-# y array to 2d
+# Label(true) data
 y_data = df.water_level.values
-print(y_data)
-
 #print(y_data)
+
 # Reshape the inpu X array to 3d and y array to 2d
 
 y_data =y_data.reshape(-1, 1)
@@ -176,11 +167,6 @@ assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 
 model = Sequential()
 #print(X.shape)
-model.add(GRU(units=50, return_sequences=True, input_shape=(num_steps, 6)))
-#model.add(GRU(units=50, return_sequences=True, input_shape=(X.shape[1], 1)))
-model.add(GRU(units=50))
-model.add(Dense(units=1))
-model.compile(optimizer=Adam(learning_rate=0.001), loss=dilate_loss)
 #model.compile(optimizer=Adam(learning_rate=0.001), loss=custom_loss_with_dilation)
 #model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
 
@@ -189,20 +175,33 @@ model.compile(optimizer=Adam(learning_rate=0.001), loss=dilate_loss)
 #Dense(units=1): The output layer which predicts a single value for the next time step.
 #Adam(): An adaptive optimizer commonly used in deep learning.
 #
+model.add(GRU(units=50, return_sequences=True, input_shape=(num_steps, 6)))
+#model.add(GRU(units=50, return_sequences=True, input_shape=(X.shape[1], 1)))
+model.add(GRU(units=50))
+model.add(Dense(units=1))
+#
+#Compile the model
+model.compile(optimizer=Adam(learning_rate=0.001), loss=dilate_loss)
+
+#
 #Training the Model
 
-#model.fit(): Trains the model on the prepared dataset. The epochs=10 specifies the number of iterations over the entire dataset,
-#and batch_size=32 defines the number of samples per batch.
-#Making Predictions
-model.fit(x_train_transformed, y_train_transformed, epochs=10)
-
-#input_sequence = scaled_data[-time_step:].reshape(1, time_step, 1)
-test_predict = model.predict(x_test_transformed)
-print("test_predict  ",test_predict)
-
-#print(predicted_values.shape)
-#print(predicted_values)
+history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
+          batch_size=32, validation_data=(x_test_transformed,y_test_transformed))
+#model.fit(x_train_transformed, y_train_transformed, epochs=10)
 #
-#Inverse Transforming the Predictions
-#Inverse Transforming the Predictions refers to the process of converting the scaled (normalized) predictions back to their original scale.
+#Saving trained model
+#
+model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
+lstm_training_loss = history.history['loss']
+lstm_validation_loss = history.history['val_loss']
+
+# Combine epochs, training loss, and validation loss into rows
+rows = zip(range(1, len(lstm_training_loss) + 1), lstm_training_loss, lstm_validation_loss)
+
+# Write to CSV file
+with open('/contrib/Mamoudou.Ba/gru_loss_history.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['Epoch', 'Training Loss', 'Validation Loss'])  # Write header
+    writer.writerows(rows)
 
