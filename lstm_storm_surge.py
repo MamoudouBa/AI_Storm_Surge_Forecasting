@@ -18,13 +18,43 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import LSTM, Dense
 
 
-df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
+#numpy: For handling numerical data and array manipulations.
+#pandas: For data manipulation and reading datasets (CSV files).
+#MinMaxScaler: For normalizing the dataset.
+#tensorflow.keras.models and tensorflow.keras.layers: For building and training the GRU model.
+#Adam: An optimization algorithm used during training.
+df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
+#df["Temperature_bis"] = df["Temperature"] - 0.5
+#print(df.head())
+#pd.read_csv(): Reads a CSV file into a pandas DataFrame. Here, we are assuming that the dataset has a
+#               'Date' column which is set as the index of the DataFrame.
+#date_parser=True: Ensures that pandas parses the 'Date' column as datetime.
 
 #Preprocessing the Data
 #print(df)
+#print("scaled data shape is :", scaled_data.shape)
+#print(scaled_data[0])
+#MinMaxScaler(): This scales the data to a range of 0 to 1.
+#This is important because neural networks perform better when input features are scaled properly.
 #
-#print("water level ",df.water_level.values[0])
+#Preparing Data for GRU
+#print("weater level ",df.water_level.values[0])
 print("df.values shape: ",df.values.shape)
+#y = df.water_level.values
+#print(y_data)
+# Reshape the inpu X array to 3d and y array to 2d
+
+#y_data =y_data.reshape(-1, 1)
+#print(y_data.shape,df.shape)
+#water_level_scaled = scaler.fit_transform(y_data)
+#print(scaled_data[0])
+#MinMaxScaler(): This scales the data to a range of 0 to 1.
+#This is important because neural networks perform better when input features are scaled properly.
+#
+#Preparing Data for GRU
+#
+# Define functions
+# Function to reshape the input arrays
 #
 
 """
@@ -166,6 +196,7 @@ model.add(Dense(units=20, activation='relu'))
 model.add(Dense(units=1, activation='linear'))
 #adam = optimizers.Adam(lr=0.001)
 model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+
 #
 # Train the model with validation data
 #
@@ -174,19 +205,25 @@ history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
 #
 #Saving trained model
 #
-model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
-model.save('/contrib/Mamoudou.Ba/lstm_predict')
+model.save('/contrib/Mamoudou.Ba/lstm_model.h5')
+#model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
 lstm_training_loss = history.history['loss']
 lstm_validation_loss = history.history['val_loss']
+loaded_model = tf.keras.models.load_model('/contrib/Mamoudou.Ba/lstm_model.h5')
+predictions =loaded_model.predict(x_train_transformed)
+predictions = scaler_y.inverse_transform(predictions)
 
+print(predictions)
 # Combine epochs, training loss, and validation loss into rows
 rows = zip(range(1, len(lstm_training_loss) + 1), lstm_training_loss, lstm_validation_loss)
 
 # Write to CSV file
-with open('/contrib/Mamoudou.Ba/_lstm_loss_history.csv', 'w', newline='') as csvfile:
+with open('loss_history.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['Epoch', 'Training Loss', 'Validation Loss'])  # Write header
     writer.writerows(rows)
 
+#test_predict = model.predict(x_test_transformed)
+#print("test_predict  ",test_predict)
 
 
