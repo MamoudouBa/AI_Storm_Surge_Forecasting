@@ -175,6 +175,7 @@ history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
 #Saving trained model
 #
 model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
+model.save('/contrib/Mamoudou.Ba/lstm_predict')
 lstm_training_loss = history.history['loss']
 lstm_validation_loss = history.history['val_loss']
 

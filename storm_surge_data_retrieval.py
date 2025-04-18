@@ -92,7 +92,7 @@ for iyear in range(0,1):
      df = pd.DataFrame()
      for i in range(len(df_air_temp)):
         # Parse the time series index to string index
-                 string_index = df_winds.index.strftime('%Y-%m-%d %H %M %S')
+                 string_index = df_water_levels.index.strftime('%Y-%m-%d %H %M %S')
                  # Extract hour and minute
                  datetime_split = string_index[i].split(' ')
                  hour = datetime_split[1][0:2]
@@ -117,7 +117,7 @@ for iyear in range(0,1):
      if number_times > 0:
         df_output.to_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv', index=False, mode='a', float_format='%g')
         print("number_times is",number_times + 1)
-df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge.csv')
+df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv')
 #
 #Creating Zarr file
 zarr_file_name = '/contrib/Mamoudou.Ba/zarr_input_data_st_petersburg_surge'
@@ -144,4 +144,3 @@ for i in range(0,number_times):
 #removng the csv filee
 #cmd = "rm -f /contrib/Mamoudou.Ba/st_petersburg_surge.csv"
 #os.sytem(cmd)
-
