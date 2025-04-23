@@ -27,13 +27,13 @@ import pandas as pd
 import csv
 #from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 from tensorflow.keras import backend
 from tensorflow.keras import callbacks
 from tensorflow.keras.backend import int_shape
 #from tensorflow.keras.initializers import Initializer
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, model_from_json
 
 #from tensorflow.keras.layers import Conv2D, Input, SpatialDropout2D, ZeroPadding2D
 from tensorflow.keras.optimizers import Adam
@@ -89,7 +89,8 @@ print("********Num GPUs Available: *******", len(tf.config.list_physical_devices
 
 # Initializing data arrays
 #Read input datasets
-df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
+#df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
+df = pd.read_csv('surge_training_datasets', index_col='timestamp')
 
 #
 # Define functions
@@ -137,11 +138,62 @@ def create_dataset(data,label, time_step=1):
 # Define loss function
 #
 #
+#
+def dilate_loss(y_true, y_pred):
+        # Calculate shape distortion loss (e.g., using Dynamic Time Warping or a similar method)
+        shape_loss = tf.reduce_mean(tf.square(y_true - y_pred))  # Example: Mean Squared Error
+
+        # Calculate temporal localisation loss (e.g., using a time-based error metric)
+        time_loss = tf.reduce_mean(tf.abs(y_true - y_pred))  # Example: Mean Absolute Error
+
+        # Combine the losses
+        total_loss = shape_loss + time_loss  # Adjust weights as needed
+
+        return total_loss
+###################
+#
+def custom_loss_with_dilation(y_true, y_pred, dilation_rate=2):
+    """
+    Custom loss function that incorporates dilation.
+
+    Args:
+        y_true: True values (ground truth).
+        y_pred: Predicted values.
+        dilation_rate: Dilation rate for the loss calculation.
+
+    Returns:
+        The calculated loss value.
+    """
+
+    # 1. Calculate the difference between true and predicted values
+    difference = tf.subtract(y_true, y_pred)
+
+    # 2. Apply dilation to the difference (using tf.nn.atrous_conv2d or similar)
+    #   - This part depends on the specific type of dilation you need.
+    #   - For example, if you want to apply dilation to the difference,
+    #     you can use tf.nn.atrous_conv2d or tf.nn.convolution with dilation_rate.
+    #   - Example (using tf.nn.atrous_conv2d):
+    #   - Note: Replace with your specific dilation implementation
+    #   -  dilation_rate = 2
+    #  dilated_difference = tf.nn.atrous_conv2d(
+    #    value=tf.expand_dims(tf.expand_dims(difference, axis=0), axis=0),
+    #    filters=tf.expand_dims(tf.expand_dims(tf.ones_like(difference), axis=0), axis=0),
+    #    rate=dilation_rate,
+    #    padding="SAME"
+    #  )
+
+    # 3. Calculate the loss (e.g., mean squared error, mean absolute error, etc.)
+    #   - Example (using mean squared error):
+    loss = tf.reduce_mean(tf.square(difference)) # Or tf.reduce_mean(tf.abs(difference)) for MAE
+
+    return loss
+
+#
 #Splitting: train set 80% and test data 20%
 #
 # y array to 2d
 y_data = df.water_level.values
-#print(y_data)
+print(y_data)
 # Reshape the inpu X array to 3d and y array to 2d
 
 y_data =y_data.reshape(-1, 1)
@@ -179,14 +231,19 @@ assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #
 
 # Make prediction
+
 #
-loaded_model = tf.keras.models.load_model('/contrib/Mamoudou.Ba/lstm_model.h5')
-# Model output shape
-loaded_model.output_shape
-loaded_model.summary()
-loaded_model.get_config()
-predictions =loaded_model.predict(x_test_transformed)
-print(predictions)
+# load json and create model
+json_file = open('/contrib/Mamoudou.Ba/model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
+print("Loaded model from disk")
+
+loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+predictions =loaded_model.predict(x_train_transformed)
 predictions = scaler_y.inverse_transform(predictions)
 print(predictions)
 
