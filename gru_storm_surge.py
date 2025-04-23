@@ -12,12 +12,12 @@ from sklearn.preprocessing import StandardScaler
 
 from tensorflow import keras
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import GRU, Dense
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.layers import GRU, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
-import mlnext # https://pypi.org/project/mlnext-framework/
+#import mlnext # https://pypi.org/project/mlnext-framework/
 # Opening input data
-df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
+df = pd.read_csv('/contrib/Mamoudou.Ba/surge_training_datasets', index_col='timestamp')
 
 #Preprocessing the Data
 #
@@ -166,6 +166,12 @@ assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #5. Building the GRU Model
 
 model = Sequential()
+model.add(GRU(50, activation='tanh', input_shape=(num_steps, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=False))
+model.add(Dense(units=50, activation='relu'))
+model.add(Dense(units=1, activation='linear'))
+
+#model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
 #print(X.shape)
 #model.compile(optimizer=Adam(learning_rate=0.001), loss=custom_loss_with_dilation)
 #model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
@@ -175,13 +181,13 @@ model = Sequential()
 #Dense(units=1): The output layer which predicts a single value for the next time step.
 #Adam(): An adaptive optimizer commonly used in deep learning.
 #
-model.add(GRU(units=50, return_sequences=True, input_shape=(num_steps, 6)))
+#model.add(GRU(units=50, return_sequences=True, input_shape=(num_steps, 6)))
 #model.add(GRU(units=50, return_sequences=True, input_shape=(X.shape[1], 1)))
-model.add(GRU(units=50))
-model.add(Dense(units=1))
+#model.add(GRU(units=50))
+#model.add(Dense(units=1))
 #
 #Compile the model
-model.compile(optimizer=Adam(learning_rate=0.001), loss=dilate_loss)
+model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
 
 #
 #Training the Model
@@ -192,16 +198,31 @@ history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
 #
 #Saving trained model
 #
-model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
-lstm_training_loss = history.history['loss']
-lstm_validation_loss = history.history['val_loss']
 
-# Combine epochs, training loss, and validation loss into rows
-rows = zip(range(1, len(lstm_training_loss) + 1), lstm_training_loss, lstm_validation_loss)
+# Saving history
+np.save('/contrib/Mamoudou.Ba/loss_dropout_history.npy',history.history)
+#
+#Saving trained model
+# serialize model to JSON
+model_json = model.to_json()
+with open("/contrib/Mamoudou.Ba/model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
+print("Saved model to disk")
 
-# Write to CSV file
-with open('/contrib/Mamoudou.Ba/gru_loss_history.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['Epoch', 'Training Loss', 'Validation Loss'])  # Write header
-    writer.writerows(rows)
+#
+# load json and create model
+json_file = open('/contrib/Mamoudou.Ba/model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
+print("Loaded model from disk")
+
+loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+predictions =loaded_model.predict(x_train_transformed)
+predictions = scaler_y.inverse_transform(predictions)
+print(predictions)
 
