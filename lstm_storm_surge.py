@@ -11,11 +11,11 @@ import csv
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, model_from_json
 from tensorflow.keras.layers import GRU, Dense
 from tensorflow.keras.optimizers import Adam
 #import mlnext # https://pypi.org/project/mlnext-framework/
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense,Dropout
 
 
 #numpy: For handling numerical data and array manipulations.
@@ -23,31 +23,9 @@ from tensorflow.keras.layers import LSTM, Dense
 #MinMaxScaler: For normalizing the dataset.
 #tensorflow.keras.models and tensorflow.keras.layers: For building and training the GRU model.
 #Adam: An optimization algorithm used during training.
-df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
-#df["Temperature_bis"] = df["Temperature"] - 0.5
-#print(df.head())
-#pd.read_csv(): Reads a CSV file into a pandas DataFrame. Here, we are assuming that the dataset has a
-#               'Date' column which is set as the index of the DataFrame.
-#date_parser=True: Ensures that pandas parses the 'Date' column as datetime.
-
-#Preprocessing the Data
-#print(df)
-#print("scaled data shape is :", scaled_data.shape)
-#print(scaled_data[0])
-#MinMaxScaler(): This scales the data to a range of 0 to 1.
-#This is important because neural networks perform better when input features are scaled properly.
-#
-#Preparing Data for GRU
-#print("weater level ",df.water_level.values[0])
-print("df.values shape: ",df.values.shape)
-#y = df.water_level.values
-#print(y_data)
+df = pd.read_csv('/contrib/Mamoudou.Ba/surge_training_datasets', parse_dates=['timestamp'], index_col='timestamp')
 # Reshape the inpu X array to 3d and y array to 2d
 
-#y_data =y_data.reshape(-1, 1)
-#print(y_data.shape,df.shape)
-#water_level_scaled = scaler.fit_transform(y_data)
-#print(scaled_data[0])
 #MinMaxScaler(): This scales the data to a range of 0 to 1.
 #This is important because neural networks perform better when input features are scaled properly.
 #
@@ -188,42 +166,48 @@ assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
  y_test_transformed) = lstm_gru_data_transform(x_test_sc, y_test_sc, num_steps=num_steps)
 assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #
-# Training phae
+#
+# Training phase
+# Define the model
 #
 model = Sequential()
-model.add(LSTM(20, activation='tanh', input_shape=(num_steps, 6), return_sequences=False))
-model.add(Dense(units=20, activation='relu'))
+model.add(LSTM(50, activation='tanh', input_shape=(num_steps, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=False))
+model.add(Dense(units=50, activation='relu'))
 model.add(Dense(units=1, activation='linear'))
-#adam = optimizers.Adam(lr=0.001)
-model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 
+#adam = optimizers.Adam(lr=0.001)
+#model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
 #
 # Train the model with validation data
 #
 history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
           batch_size=32, validation_data=(x_test_transformed,y_test_transformed))
 #
-#Saving trained model
+# Saving history
+np.save('/contrib/Mamoudou.Ba/loss_dropout_history.npy',history.history)
 #
-model.save('/contrib/Mamoudou.Ba/lstm_model.h5')
-#model.save_weights('/contrib/Mamoudou.Ba/lstm_mse.h5')
-lstm_training_loss = history.history['loss']
-lstm_validation_loss = history.history['val_loss']
-loaded_model = tf.keras.models.load_model('/contrib/Mamoudou.Ba/lstm_model.h5')
+#Saving trained model
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("lstm_dropout_model.h5")
+print("Saved model to disk")
+#
+# load json and create model
+json_file = open('model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("lstm_dropout_model.h5")
+print("Loaded model from disk")
+
+loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
 predictions =loaded_model.predict(x_train_transformed)
 predictions = scaler_y.inverse_transform(predictions)
-
 print(predictions)
-# Combine epochs, training loss, and validation loss into rows
-rows = zip(range(1, len(lstm_training_loss) + 1), lstm_training_loss, lstm_validation_loss)
-
-# Write to CSV file
-with open('loss_history.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['Epoch', 'Training Loss', 'Validation Loss'])  # Write header
-    writer.writerows(rows)
-
-#test_predict = model.predict(x_test_transformed)
-#print("test_predict  ",test_predict)
 
 
