@@ -54,6 +54,9 @@ for sliding window approach """
     y_array = np.array(y)
     return x_array, y_array
 #
+#create_dataset(): Prepares the dataset for time-series forecasting. 
+# It creates sliding windows of time_step length to predict the next time step. 
+# It is not use in the current version
 def create_dataset(data,label, time_step=1):
     X, y = [], []
     for i in range(len(data) - time_step - 1):
@@ -141,7 +144,7 @@ y_test_sc = scaler_y.transform(y_test)
 #
 #
 # Reshape the original 2D data into 3D “sliding window” shape
-num_steps = 5
+num_steps = 102
 num_features = 6
 #x_shaped = np.reshape(X, newshape=(-1, num_steps, num_features))
 # training set
@@ -157,11 +160,7 @@ assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
 assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #
 
-#print("Printinh shape  ",X.shape, y.shape)
-#print("printing shape   ",X.shape[0],X.shape[1], X.shape[2])
-#print(X)
 #
-#create_dataset(): Prepares the dataset for time-series forecasting. It creates sliding windows of time_step length to predict the next time step.
 #X.reshape(): Reshapes the input data to fit the expected shape for the GRU which is 3D: [samples, time steps, features].
 #5. Building the GRU Model
 
@@ -170,31 +169,14 @@ model.add(GRU(50, activation='tanh', input_shape=(num_steps, 6), dropout=0.2, re
 model.add(Dense(units=50, activation='relu'))
 model.add(Dense(units=1, activation='linear'))
 
-#model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
-model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
-#print(X.shape)
-#model.compile(optimizer=Adam(learning_rate=0.001), loss=custom_loss_with_dilation)
-#model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
-
-#GRU(units=50): Adds a GRU layer with 50 units (neurons).
-#return_sequences=True: Ensures that the GRU layer returns the entire sequence (required for stacking multiple GRU layers).
-#Dense(units=1): The output layer which predicts a single value for the next time step.
-#Adam(): An adaptive optimizer commonly used in deep learning.
-#
-#model.add(GRU(units=50, return_sequences=True, input_shape=(num_steps, 6)))
-#model.add(GRU(units=50, return_sequences=True, input_shape=(X.shape[1], 1)))
-#model.add(GRU(units=50))
-#model.add(Dense(units=1))
-#
 #Compile the model
+#model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
 
 #
 #Training the Model
-
-history = model.fit(x_train_transformed, y_train_transformed, epochs=10, \
+history = model.fit(x_train_transformed, y_train_transformed, epochs=100, \
           batch_size=32, validation_data=(x_test_transformed,y_test_transformed))
-#model.fit(x_train_transformed, y_train_transformed, epochs=10)
 #
 #Saving trained model
 #
@@ -208,7 +190,7 @@ model_json = model.to_json()
 with open("/contrib/Mamoudou.Ba/model.json", "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
+model.save_weights("/contrib/Mamoudou.Ba/gru_dropout_model.h5")
 print("Saved model to disk")
 
 #
@@ -218,7 +200,7 @@ loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
+loaded_model.load_weights("/contrib/Mamoudou.Ba/gru_dropout_model.h5")
 print("Loaded model from disk")
 
 loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])

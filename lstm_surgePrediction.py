@@ -1,12 +1,6 @@
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 
-# Author: Mamoudou Ba - May 2019 -
-# This code is adopted from Jim Biard's code of Automated detection of weather fronts 
-# using deep learning neural network. This application is a convolutional neural network for
-# forecast probabilities of storm based using the HRRR fields as inputs
-# Jim Biard was instrumental to prototyping this application
-# The function weighted_categorical_crossentropy is obtained from 
-# https://gist.github.com/wassname/ce364fddfc8a025bfab4348cf5de852d
+# Author: Mamoudou Ba - 2025
 #
 import os
 
@@ -89,7 +83,6 @@ print("********Num GPUs Available: *******", len(tf.config.list_physical_devices
 
 # Initializing data arrays
 #Read input datasets
-#df = pd.read_csv('st_petersburg_surge_test.csv', parse_dates=['timestamp'], index_col='timestamp')
 df = pd.read_csv('surge_training_datasets', index_col='timestamp')
 
 #

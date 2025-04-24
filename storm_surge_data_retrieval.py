@@ -81,14 +81,11 @@ for iyear in range(0,1):
      df_winds = df_winds.dropna()
      df_air_temp = df_air_temp.dropna()
      df_air_pressure = df_air_pressure.dropna()
+     # Content of each variable array
      #air pressure: [pressure obs, 'string flag']
      #surface wind: [wind speed, wind direction in degrees, wind direction in words, gust speed, string flag]
      #air temperature: [temperature ons, string flag]
      #water level: [water level obs, sigma, qc flag, string flag]
-     #print(df_air_pressure.values[0])
-     #print(df_winds.values[0])
-     #print(df_air_temp.values[0])
-     #print(df_water_levels.values[0])
      df = pd.DataFrame()
      for i in range(len(df_air_temp)):
         # Parse the time series index to string index
@@ -102,10 +99,6 @@ for iyear in range(0,1):
                      #If using all scalar values, you must pass an index
                      #reference: https://stackoverflow.com/questions/17839973
                      #/constructing-dataframe-from-values-in-variables-yields-valueerror-if-using-all
-                     #
-                     # df = pd.DataFrame({'timestamp':[date],['air_temp':[temp obs], 'air_pressure':[bressure obs],
-                     #                    'wind_speed':[wind speed], 'wind_direction':[wind direction obs],
-                     #                    'wind_gust':[gust speed], 'water_level':[water level obs]]}
                      #
                      temp_df = pd.DataFrame({'timestamp':string_index[i],'air_temp':[df_air_temp.values[i][0]],
                        'air_pressure':[df_air_pressure.values[i][0]],'wind_speed':[df_winds.values[i][0]],
