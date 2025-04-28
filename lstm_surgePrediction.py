@@ -83,7 +83,8 @@ print("********Num GPUs Available: *******", len(tf.config.list_physical_devices
 
 # Initializing data arrays
 #Read input datasets
-df = pd.read_csv('surge_training_datasets', index_col='timestamp')
+#df = pd.read_csv('surge_training_datasets', index_col='timestamp')
+df = pd.read_csv('surge_data_20220928.csv', index_col='timestamp')
 
 #
 # Define functions
@@ -94,7 +95,7 @@ df = pd.read_csv('surge_training_datasets', index_col='timestamp')
 
 https://medium.com/data-science/how-to-reshape-data-and-do-regression-for-time-series-using-lstm-133dad96cd00#id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6IjgyMWYzYmM2NmYwNzUxZjc4NDA2MDY3OTliMWFkZjllOWZiNjBkZmIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTYxNTcxODc3ODE2MTU1ODcyMzIiLCJoZCI6Im5vYWEuZ292IiwiZW1haWwiOiJtYW1vdWRvdS5iYUBub2FhLmdvdiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYmYiOjE3NDM0MjUwOTQsIm5hbWUiOiJNYW1vdWRvdSBCYSAtIE5PQUEgRmVkZXJhbCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJY2FsV1JldUZ5TXNXVmp3QkhVRlJYT1RqR0RBeTdzVVJfZ2VBNmxVU1RrOVM3dFEwej1zOTYtYyIsImdpdmVuX25hbWUiOiJNYW1vdWRvdSIsImZhbWlseV9uYW1lIjoiQmEgLSBOT0FBIEZlZGVyYWwiLCJpYXQiOjE3NDM0MjUzOTQsImV4cCI6MTc0MzQyODk5NCwianRpIjoiYzA4OTE0OTgyOWU3ZjQ4ODQ5NzA1NDkzZGUxNzRjNzFjYWI5ZDdhMSJ9.NNfCSi2tfyn5red-TXPbzbFZjwrGlv2XdLNUdNEIE_TOSd6ZDvV6uzb9SteB-GRxrGqrV36boSTmWuKp9tNepDb2Yp16jWvqR6NmPQ3CRnLjkK4DGFthSvNQPf_7dEgsPqMhHJzgyRzWyLqGccaaafPhBLLjeq766GquOtnpao6Q8To3CxPuz_eqyKJhz1zpIcIrhoiRn6a2PAJ17r3fOL3auAsg6QNM15N0XGaokj54FOS4HY_nW53x_Z5PXw6gAe8V4CuETo5TCLNNEcOWCzjD_5PHbppGhUUr3CSEWpSivMQbDBa7ICORXO5VGYnr3jy83dXBJNEPBx5TwlXnvw"""
 #
-def lstm_gru_data_transform(x_data, y_data, num_steps=102):
+def lstm_gru_data_transform(x_data, y_data, num_steps = 3):
     """ Changes data to the format for LSTM training
 for sliding window approach """
     # Prepare the list for the transformed data
@@ -186,36 +187,38 @@ def custom_loss_with_dilation(y_true, y_pred, dilation_rate=2):
 #
 # y array to 2d
 y_data = df.water_level.values
-print(y_data)
+#print(df)
 # Reshape the inpu X array to 3d and y array to 2d
 
 y_data =y_data.reshape(-1, 1)
 
-train_ind = int(0.8 * df.values.shape[0])
-x_train = df.values[:train_ind]
-x_test = df.values[train_ind:]
-y_train = y_data[:train_ind]
-y_test = y_data[train_ind:]
-
+#train_ind = int(0.8 * df.values.shape[0])
+#x_train = df.values[:train_ind]
+#x_test = df.values[train_ind:]
+#y_train = y_data[:train_ind]
+#y_test = y_data[train_ind:]
+x_test = df.values
+print("xtest: ", x_test[0])
+y_test = y_data
 # scalers
 scaler_x = StandardScaler()
 scaler_y = StandardScaler()
 # scaling
-x_train_sc = scaler_x.fit_transform(x_train)
-x_test_sc = scaler_x.transform(x_test)
-y_train_sc = scaler_y.fit_transform(y_train)
-y_test_sc = scaler_y.transform(y_test)
+y_test_sc = scaler_y.fit_transform(y_test)
+x_test_sc = scaler_x.fit_transform(x_test)
+#x_test_sc = scaler_x.transform(x_test)
+#y_test_sc = scaler_y.transform(y_test)
 #
 #
 # Reshape the original 2D data into 3D “sliding window” shape
-num_steps = 5
+num_steps = 3
 num_features = 6
 #x_shaped = np.reshape(X, newshape=(-1, num_steps, num_features))
 # training set
 
-(x_train_transformed,
- y_train_transformed) = lstm_gru_data_transform(x_train_sc, y_train_sc, num_steps=num_steps)
-assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
+#(x_train_transformed,
+# y_train_transformed) = lstm_gru_data_transform(x_train_sc, y_train_sc, num_steps=num_steps)
+#assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
 # test set
 (x_test_transformed,
  y_test_transformed) = lstm_gru_data_transform(x_test_sc, y_test_sc, num_steps=num_steps)
@@ -236,9 +239,13 @@ loaded_model.load_weights("/contrib/Mamoudou.Ba/lstm_dropout_model.h5")
 print("Loaded model from disk")
 
 loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
-predictions =loaded_model.predict(x_train_transformed)
+predictions =loaded_model.predict(x_test_transformed)
+#print(predictions)
 predictions = scaler_y.inverse_transform(predictions)
-print(predictions)
+print("Inverse to get correct units")
+print('water lever observed,  water level predicted')
+for i in range(len(predictions)):
+    print(df.index[i],y_data[i]*3.37,predictions[i]*3.37)
 
 #lstm()
 
