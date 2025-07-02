@@ -13,12 +13,12 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, model_from_json
-from tensorflow.keras.layers import GRU, Dense
+from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.callbacks import EarlyStopping
 
 from tensorflow.keras.optimizers import Adam
 #import mlnext # https://pypi.org/project/mlnext-framework/
-from tensorflow.keras.layers import GRU, Dense,Dropout
+from tensorflow.keras.layers import LSTM, Dense,Dropout
 import matplotlib.pyplot as plt
 
 import matplotlib.dates as mdates
@@ -47,14 +47,14 @@ tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config));
 #numpy: For handling numerical data and array manipulations.
 #pandas: For data manipulation and reading datasets (CSV files).
 #MinMaxScaler: For normalizing the dataset.
-#tensorflow.keras.models and tensorflow.keras.layers: For building and training the GRU model.
+#tensorflow.keras.models and tensorflow.keras.layers: For building and training the LSTM model.
 #Adam: An optimization algorithm used during training.
 df = pd.read_csv('surge_training_datasets.csv', parse_dates=['timestamp'], index_col='timestamp')
 #
 data = df.sort_values(by='timestamp')
 data =  df.tail(52513)
 
-#Preparing Data for GRU
+#Preparing Data for LSTM
 #
 # Define functions
 # Function to reshape the input arrays
@@ -62,8 +62,8 @@ data =  df.tail(52513)
 
 
 
-def gru_data_transform(x_data, y_data, look_back, forecast_horizon):
-    """ Changes data to the format for GRU training
+def lstm_data_transform(x_data, y_data, look_back, forecast_horizon):
+    """ Changes data to the format for LSTM training
 for sliding window approach """
     # Prepare the list for the transformed data
     #X, y = list(), list()
@@ -187,11 +187,11 @@ num_features = 6
 # Reshape the original 2D data into 3D “sliding window” shape
 
 (x_train_transformed,
- y_train_transformed) = gru_data_transform(x_train_sc, y_train_sc, look_back,forecast_horizon)
+ y_train_transformed) = lstm_data_transform(x_train_sc, y_train_sc, look_back,forecast_horizon)
 assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
 # test set
 (x_test_transformed,
- y_test_transformed) = gru_data_transform(x_test_sc, y_test_sc, look_back,forecast_horizon)
+ y_test_transformed) = lstm_data_transform(x_test_sc, y_test_sc, look_back,forecast_horizon)
 assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #
 #
@@ -207,8 +207,8 @@ early_stopping = EarlyStopping(
 )
 
 model = Sequential()
-model.add(GRU(50, activation='tanh', input_shape=(look_back, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=True))
-model.add(GRU(50))
+model.add(LSTM(50, activation='tanh', input_shape=(look_back, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=True))
+model.add(LSTM(50))
 model.add(Dense(forecast_horizon)) # Output layer for multi-step prediction
 
 #adam = optimizers.Adam(lr=0.001)
@@ -308,7 +308,7 @@ plt.legend(['Observed water level)',future_projection + look_back_period ], loc=
 plt.gcf().autofmt_xdate()
 #plt.show()
 patience_epochs = 5
-filename = 'gru_obs_prediction_ft_myers_' + str(patience_epochs) + '_' + str(look_back) + 'hours.png'
+filename = 'lstm_obs_prediction_ft_myers_' + str(patience_epochs) + '_' + str(look_back) + 'hours.png'
  # Set the name of the variable to plot
 plt.savefig(filename) # Set the output file name
 
@@ -316,13 +316,13 @@ plt.savefig(filename) # Set the output file name
 #Saving trained model
 # serialize model to JSON
 #model_json = model.to_json()
-fileout = 'gru_multi_steps' + str(look_back) + 'hours_model_json'
+fileout = 'lstm_multi_steps' + str(look_back) + 'hours_model_json'
 fileout = model.to_json()
-model_json_saved = 'gru_multi_steps_' + str(look_back) + 'hours_model.json'
+model_json_saved = 'lstm_multi_steps_' + str(look_back) + 'hours_model.json'
 with open(model_json_saved, "w") as json_file:
     json_file.write(fileout)
 # serialize and weights to HDF5
-weights_file = 'gru_multi_steps_' + str(look_back) + 'hours_model.h5'
+weights_file = 'lstm_multi_steps_' + str(look_back) + 'hours_model.h5'
 model.save_weights(weights_file)
 print("Saved model to disk")
 #
@@ -339,5 +339,6 @@ print("Loaded model from disk")
 loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
 predictions =loaded_model.predict(x_train_transformed)
 predictions = scaler_y.inverse_transform(predictions)
-#print(predictions)
+print('load the model and print prediction array')
+print(predictions)
 
