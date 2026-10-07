@@ -1,6 +1,8 @@
 /*
 !/storm_surge/
 !/storm_surge_scripts/
+!/old_scripts/
+!/old_scripts/**
 !/README.md
 !/.gitignore
 
