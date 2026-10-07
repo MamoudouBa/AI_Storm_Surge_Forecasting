@@ -1,0 +1,5 @@
+station_id,station_name,lat,lon,datum,timezone
+8534720,"Atlantic City, NJ",39.36,-74.42,NAVD88,GMT
+8557380,"Lewes, DE",38.78,-75.12,NAVD88,GMT
+8638610,"Sewells Point, VA",36.94,-76.33,NAVD88,GMT
+8651370,"Duck Pier, NC",36.18,-75.75,NAVD88,GMT

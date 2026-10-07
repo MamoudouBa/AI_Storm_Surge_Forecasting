@@ -1,3 +1,4 @@
+# Developed with the assistance of the Gemini AI code assistant.
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 
 #https://www.geeksforgeeks.org/gated-recurrent-unit-networks/
@@ -9,28 +10,36 @@ import pandas as pd
 import csv
 #from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
-
 from tensorflow import keras
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, model_from_json
-from tensorflow.keras.layers import GRU, Dense, Dropout
+from tensorflow.keras.layers import GRU, Dense
+from tensorflow.keras.callbacks import EarlyStopping
+
 from tensorflow.keras.optimizers import Adam
 #import mlnext # https://pypi.org/project/mlnext-framework/
-# Opening input data
-df = pd.read_csv('/contrib/Mamoudou.Ba/surge_training_datasets', index_col='timestamp')
+from tensorflow.keras.layers import GRU, Dense,Dropout
 
-#Preprocessing the Data
+
+#numpy: For handling numerical data and array manipulations.
+#pandas: For data manipulation and reading datasets (CSV files).
+#MinMaxScaler: For normalizing the dataset.
+#tensorflow.keras.models and tensorflow.keras.layers: For building and training the GRU model.
+#Adam: An optimization algorithm used during training.
+df = pd.read_csv('/contrib/Mamoudou.Ba/surge_training_datasets.csv', parse_dates=['timestamp'], index_col='timestamp')
 #
+#Preparing Data for GRU
+#
+# Define functions
 # Function to reshape the input arrays
 #
-"""
 
+"""
+lstm_gru_data_transform is obtained from
 https://medium.com/data-science/how-to-reshape-data-and-do-regression-for-time-series-using-lstm-133dad96cd00#id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6IjgyMWYzYmM2NmYwNzUxZjc4NDA2MDY3OTliMWFkZjllOWZiNjBkZmIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTYxNTcxODc3ODE2MTU1ODcyMzIiLCJoZCI6Im5vYWEuZ292IiwiZW1haWwiOiJtYW1vdWRvdS5iYUBub2FhLmdvdiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYmYiOjE3NDM0MjUwOTQsIm5hbWUiOiJNYW1vdWRvdSBCYSAtIE5PQUEgRmVkZXJhbCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJY2FsV1JldUZ5TXNXVmp3QkhVRlJYT1RqR0RBeTdzVVJfZ2VBNmxVU1RrOVM3dFEwej1zOTYtYyIsImdpdmVuX25hbWUiOiJNYW1vdWRvdSIsImZhbWlseV9uYW1lIjoiQmEgLSBOT0FBIEZlZGVyYWwiLCJpYXQiOjE3NDM0MjUzOTQsImV4cCI6MTc0MzQyODk5NCwianRpIjoiYzA4OTE0OTgyOWU3ZjQ4ODQ5NzA1NDkzZGUxNzRjNzFjYWI5ZDdhMSJ9.NNfCSi2tfyn5red-TXPbzbFZjwrGlv2XdLNUdNEIE_TOSd6ZDvV6uzb9SteB-GRxrGqrV36boSTmWuKp9tNepDb2Yp16jWvqR6NmPQ3CRnLjkK4DGFthSvNQPf_7dEgsPqMhHJzgyRzWyLqGccaaafPhBLLjeq766GquOtnpao6Q8To3CxPuz_eqyKJhz1zpIcIrhoiRn6a2PAJ17r3fOL3auAsg6QNM15N0XGaokj54FOS4HY_nW53x_Z5PXw6gAe8V4CuETo5TCLNNEcOWCzjD_5PHbppGhUUr3CSEWpSivMQbDBa7ICORXO5VGYnr3jy83dXBJNEPBx5TwlXnvw"""
 #
-# Custom loss functions
-#
-def lstm_gru_data_transform(x_data, y_data, num_steps=100):
-    """ Changes data to the format for LSTM training
+def lstm_gru_data_transform(x_data, y_data, num_steps=1):
+    """ Changes data to the format for GRU training
 for sliding window approach """
     # Prepare the list for the transformed data
     X, y = list(), list()
@@ -53,10 +62,8 @@ for sliding window approach """
     x_array = np.array(X)
     y_array = np.array(y)
     return x_array, y_array
-#
-#create_dataset(): Prepares the dataset for time-series forecasting. 
-# It creates sliding windows of time_step length to predict the next time step. 
-# It is not use in the current version
+
+
 def create_dataset(data,label, time_step=1):
     X, y = [], []
     for i in range(len(data) - time_step - 1):
@@ -116,23 +123,23 @@ def custom_loss_with_dilation(y_true, y_pred, dilation_rate=2):
     loss = tf.reduce_mean(tf.square(difference)) # Or tf.reduce_mean(tf.abs(difference)) for MAE
 
     return loss
-
-
 #
 #Splitting: train set 80% and test data 20%
-# Label(true) data
+#
+# y array to 2d
+# label( true obs) label
 y_data = df.water_level.values
 #print(y_data)
-
 # Reshape the inpu X array to 3d and y array to 2d
 
 y_data =y_data.reshape(-1, 1)
+
 train_ind = int(0.8 * df.values.shape[0])
 x_train = df.values[:train_ind]
 x_test = df.values[train_ind:]
 y_train = y_data[:train_ind]
 y_test = y_data[train_ind:]
-#print(df.values)
+
 # scalers
 scaler_x = StandardScaler()
 scaler_y = StandardScaler()
@@ -143,13 +150,11 @@ y_train_sc = scaler_y.fit_transform(y_train)
 y_test_sc = scaler_y.transform(y_test)
 #
 #
-# Reshape the original 2D data into 3D “sliding window” shape
-num_steps = 102
+num_steps = 24
 num_features = 6
-#x_shaped = np.reshape(X, newshape=(-1, num_steps, num_features))
-# training set
 
 # training set
+# Reshape the original 2D data into 3D “sliding window” shape
 
 (x_train_transformed,
  y_train_transformed) = lstm_gru_data_transform(x_train_sc, y_train_sc, num_steps=num_steps)
@@ -159,52 +164,58 @@ assert x_train_transformed.shape[0] == y_train_transformed.shape[0]
  y_test_transformed) = lstm_gru_data_transform(x_test_sc, y_test_sc, num_steps=num_steps)
 assert x_test_transformed.shape[0] == y_test_transformed.shape[0]
 #
-
 #
-#X.reshape(): Reshapes the input data to fit the expected shape for the GRU which is 3D: [samples, time steps, features].
-#5. Building the GRU Model
+# Define the model
+#
+early_stopping = EarlyStopping(
+    monitor='val_loss',  # Or another metric like 'val_accuracy'
+    min_delta=0,  # Minimum change in monitored quantity to qualify as an improvement
+    patience=2,   # Number of epochs to wait before stopping if no improvement
+    verbose=1,    # Print messages when training stops
+    mode='min'    # 'min' for minimization, 'max' for maximization
+    # restore_best_weights=True  # Restore the model weights from the epoch with the best monitored value (optional)
+)
 
 model = Sequential()
 model.add(GRU(50, activation='tanh', input_shape=(num_steps, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=False))
 model.add(Dense(units=50, activation='relu'))
 model.add(Dense(units=1, activation='linear'))
 
-#Compile the model
+#adam = optimizers.Adam(lr=0.001)
 #model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 model.compile(optimizer=Adam(learning_rate=0.0001), loss=dilate_loss)
-
 #
-#Training the Model
-history = model.fit(x_train_transformed, y_train_transformed, epochs=100, \
-          batch_size=32, validation_data=(x_test_transformed,y_test_transformed))
+# Train the model with validation data
 #
-#Saving trained model
+history = model.fit(x_train_transformed, y_train_transformed, epochs=2, \
+          batch_size=32, validation_data=(x_test_transformed,y_test_transformed), callbacks=[early_stopping])
 #
-
 # Saving history
 np.save('/contrib/Mamoudou.Ba/loss_dropout_history.npy',history.history)
 #
 #Saving trained model
 # serialize model to JSON
-model_json = model.to_json()
-with open("/contrib/Mamoudou.Ba/model.json", "w") as json_file:
-    json_file.write(model_json)
-# serialize weights to HDF5
-model.save_weights("/contrib/Mamoudou.Ba/gru_dropout_model.h5")
+#model_json = model.to_json()
+fileout = 'gru_steps' + str(num_steps) + 'hours_model_json'
+fileout = model.to_json()
+model_json_saved = 'gru_steps_' + str(num_steps) + 'hours_model.json'
+with open(model_json_saved, "w") as json_file:
+    json_file.write(fileout)
+# serialize and weights to HDF5
+weights_file = 'gru_steps_' + str(num_steps) + 'hours_model.h5'
+model.save_weights(weights_file)
 print("Saved model to disk")
-
 #
 # load json and create model
-json_file = open('/contrib/Mamoudou.Ba/model.json', 'r')
+json_file = open(model_json_saved, 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights("/contrib/Mamoudou.Ba/gru_dropout_model.h5")
+loaded_model.load_weights(weights_file)
 print("Loaded model from disk")
 
 loaded_model.compile(loss=dilate_loss, optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
 predictions =loaded_model.predict(x_train_transformed)
 predictions = scaler_y.inverse_transform(predictions)
-print(predictions)
-
+#print(predictions)

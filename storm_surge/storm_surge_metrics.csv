@@ -1,0 +1,6 @@
+Lookback,RMSE (ft),Skill Score,Low Bias,High Bias
+ETSS (Raw),0.196,Ref,0.008,-0.037
+96h Lookback,1.812,-825.6%,-1.274,-1.91
+192h Lookback,1.967,-904.5%,-1.204,-1.957
+480h Lookback,1.394,-612.0%,-1.009,-1.457
+1344h Lookback,0.523,-166.9%,-0.021,-0.371

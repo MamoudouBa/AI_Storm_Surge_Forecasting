@@ -1,3 +1,4 @@
+# Developed with the assistance of the Gemini AI code assistant.
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 
 # Author: Mamoudou Ba - 2025
@@ -84,7 +85,7 @@ print("********Num GPUs Available: *******", len(tf.config.list_physical_devices
 # Initializing data arrays
 #Read input datasets
 #df = pd.read_csv('surge_training_datasets', index_col='timestamp')
-df = pd.read_csv('surge_data_20220928.csv', index_col='timestamp')
+df = pd.read_csv('202209_27_28_ft_myers.surge_test.csv', index_col='timestamp')
 
 #
 # Define functions
@@ -95,7 +96,7 @@ df = pd.read_csv('surge_data_20220928.csv', index_col='timestamp')
 
 https://medium.com/data-science/how-to-reshape-data-and-do-regression-for-time-series-using-lstm-133dad96cd00#id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6IjgyMWYzYmM2NmYwNzUxZjc4NDA2MDY3OTliMWFkZjllOWZiNjBkZmIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMTYyOTYwMzU4MzQtazFrNnFlMDYwczJ0cDJhMmphbTRsamRjbXMwMHN0dGcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTYxNTcxODc3ODE2MTU1ODcyMzIiLCJoZCI6Im5vYWEuZ292IiwiZW1haWwiOiJtYW1vdWRvdS5iYUBub2FhLmdvdiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYmYiOjE3NDM0MjUwOTQsIm5hbWUiOiJNYW1vdWRvdSBCYSAtIE5PQUEgRmVkZXJhbCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJY2FsV1JldUZ5TXNXVmp3QkhVRlJYT1RqR0RBeTdzVVJfZ2VBNmxVU1RrOVM3dFEwej1zOTYtYyIsImdpdmVuX25hbWUiOiJNYW1vdWRvdSIsImZhbWlseV9uYW1lIjoiQmEgLSBOT0FBIEZlZGVyYWwiLCJpYXQiOjE3NDM0MjUzOTQsImV4cCI6MTc0MzQyODk5NCwianRpIjoiYzA4OTE0OTgyOWU3ZjQ4ODQ5NzA1NDkzZGUxNzRjNzFjYWI5ZDdhMSJ9.NNfCSi2tfyn5red-TXPbzbFZjwrGlv2XdLNUdNEIE_TOSd6ZDvV6uzb9SteB-GRxrGqrV36boSTmWuKp9tNepDb2Yp16jWvqR6NmPQ3CRnLjkK4DGFthSvNQPf_7dEgsPqMhHJzgyRzWyLqGccaaafPhBLLjeq766GquOtnpao6Q8To3CxPuz_eqyKJhz1zpIcIrhoiRn6a2PAJ17r3fOL3auAsg6QNM15N0XGaokj54FOS4HY_nW53x_Z5PXw6gAe8V4CuETo5TCLNNEcOWCzjD_5PHbppGhUUr3CSEWpSivMQbDBa7ICORXO5VGYnr3jy83dXBJNEPBx5TwlXnvw"""
 #
-def lstm_gru_data_transform(x_data, y_data, num_steps = 3):
+def lstm_gru_data_transform(x_data, y_data, num_steps = 24):
     """ Changes data to the format for LSTM training
 for sliding window approach """
     # Prepare the list for the transformed data
@@ -211,7 +212,7 @@ x_test_sc = scaler_x.fit_transform(x_test)
 #
 #
 # Reshape the original 2D data into 3D “sliding window” shape
-num_steps = 3
+num_steps = 24
 num_features = 6
 #x_shaped = np.reshape(X, newshape=(-1, num_steps, num_features))
 # training set
@@ -248,4 +249,3 @@ for i in range(len(predictions)):
     print(df.index[i],y_data[i]*3.37,predictions[i]*3.37)
 
 #lstm()
-

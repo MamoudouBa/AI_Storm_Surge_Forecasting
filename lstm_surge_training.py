@@ -1,3 +1,4 @@
+# Developed with the assistance of the Gemini AI code assistant.
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 
 # Author: Mamoudou Ba - May 2019 -
@@ -283,4 +284,3 @@ with open('loss_history.csv', 'w', newline='') as csvfile:
     writer.writerows(rows)
 
 #lstm()
-

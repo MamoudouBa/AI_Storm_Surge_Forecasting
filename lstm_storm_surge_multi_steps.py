@@ -1,3 +1,4 @@
+# Developed with the assistance of the Gemini AI code assistant.
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 
 #https://www.geeksforgeeks.org/gated-recurrent-unit-networks/
@@ -177,9 +178,9 @@ y_test_sc = scaler_y.transform(y_test)
 #
 #
 # Define window size (input sequence length) and prediction length
-look_back = 720  # Number of past time steps to look at
+look_back = 8760  # Number of past time steps to look at
 
-forecast_horizon = 48 # Number of future time steps to predict
+forecast_horizon = 102 # Number of future time steps to predict
 
 num_features = 6
 
@@ -207,7 +208,8 @@ early_stopping = EarlyStopping(
 )
 
 model = Sequential()
-model.add(LSTM(50, activation='tanh', input_shape=(look_back, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=True))
+model.add(LSTM(50, activation='tanh', unit_forget_bias=True, bias_initializer='zeros', \
+                 input_shape=(look_back, 6), dropout=0.2, recurrent_dropout=0.2, return_sequences=True))
 model.add(LSTM(50))
 model.add(Dense(forecast_horizon)) # Output layer for multi-step prediction
 
@@ -307,8 +309,8 @@ plt.legend(['Observed water level)',future_projection + look_back_period ], loc=
 #ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 plt.gcf().autofmt_xdate()
 #plt.show()
-patience_epochs = 5
-filename = 'lstm_obs_prediction_ft_myers_' + str(patience_epochs) + '_' + str(look_back) + 'hours.png'
+#patience_epochs = 5
+filename = 'lstm_obs_prediction_ft_myers_num_future_fct_' + str(forecast_horizon) + '_lookback_' + str(look_back) + 'hours.png'
  # Set the name of the variable to plot
 plt.savefig(filename) # Set the output file name
 
@@ -341,4 +343,3 @@ predictions =loaded_model.predict(x_train_transformed)
 predictions = scaler_y.inverse_transform(predictions)
 print('load the model and print prediction array')
 print(predictions)
-

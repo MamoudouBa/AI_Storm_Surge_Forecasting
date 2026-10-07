@@ -1,0 +1,4 @@
+station_id,station_name,month_year,surrogate_mode,scaler,ai_wl_rmse_ft,ai_wl_bias_ft,etss_wl_rmse_ft,etss_wl_bias_ft,ai_surge_rmse_ft,etss_surge_rmse_ft,ai_wl_error_reduction_pct
+8726520,St_Petersburg_FL,01/2026,GFS-4QUADRANT-ETSS-HYBRID,ROBUST,0.295,0.178,0.215,0.073,0.254,0.167,-37.7
+8726520,St_Petersburg_FL,02/2026,GFS-4QUADRANT-ETSS-HYBRID,ROBUST,0.288,0.175,0.188,0.008,0.255,0.149,-52.8
+8726520,St_Petersburg_FL,03/2026,GFS-4QUADRANT-ETSS-HYBRID,ROBUST,0.335,0.312,0.123,0.014,0.322,0.088,-173.1

@@ -1,3 +1,4 @@
+# Developed with the assistance of the Gemini AI code assistant.
 #!/contrib/Mamoudou.Ba/miniconda3/envs/mlaws2t/bin/python
 import requests
 import pandas as pd
@@ -7,6 +8,7 @@ import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 
 import warnings
+import os
 #
 # Remove the csv file if exists
 # to avoid appending data to the old ones.
@@ -17,15 +19,15 @@ if os.path.exists('/contrib/Mamoudou.Ba/surge_data_20220928.csv'):
 warnings.filterwarnings('ignore')
     ## Define your parameters 
 number_times = 0
-begin_date = '20220927'
-end_date = '20220928'
+begin_date = '20030101'
+end_date = '20211231'
 station = '8725520'
 datum = 'MHHW'
 time_zone = 'gmt'
 units = 'english'
 
     ## for plot title
-station_name = 'Fort Myers'
+station_name = 'Ft Myers'
 storm_name = 'Hurricane Ian 2022'
     ## paste the URL from the URL builder
     ## this is the url for water level data
@@ -251,7 +253,7 @@ for i in range(0,len(df_water_levels)):
                        number_times+= 1
                  #print(month[imonth],number_times)
 if number_times > 0:
-                 df.to_csv("surge_data_20220928.csv", index=False, mode='a', float_format='%g')
+                 df.to_csv("ft_myers_test_data_2023_2021.csv", index=False, mode='a', float_format='%g')
 
 
 '''
@@ -269,7 +271,8 @@ plt.tight_layout()
 
     ## set date format for all following plots
 
-date_form = dates.DateFormatter("%H:%M \n %m/%d")
+date_form = dates.DateFormatter("%H:%M 
+ %m/%d")
     ## set default plot style
 plt.style.use('ggplot')
     ## create a figure with subplots (rows, columns, figsize)

@@ -23,32 +23,34 @@ def leap_year(y):
     else:
         return False
 
-year = ['2002', '2003']
+year = ['2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', \
+        '2011','2012', '2013', '2014', '2015', '2016']
+
 month = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 day = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
          '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24',
          '25', '26','27', '28', '29', '30', '31']
 number_of_day_in_a_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-st_petersburg  = nc.Station(8726520)
-ft_myers  = nc.Station(8725520)
-old_port_tampa  = nc.Station(8726607)
-clear_water_beatch  = nc.Station(8727520)
-
-file_name = "/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv"
-if os.path.exists(file_name):
-   cmd = "rm " + file_name
-   os.system(cmd)
+st_petersburg = nc.Station(8726520)
+#ft_myers  = nc.Station(8725520)
+#old_port_tampa  = nc.Station(8726607)
+#clear_water_beatch  = nc.Station(8727520)
 
 df_output = pd.DataFrame()
 number_times = 0
-for iyear in range(0,1):
+for iyear in range(1,14):
+     file_name = "/contrib/Mamoudou.Ba/' + year[iyear] + '_st_petersburg.surge_training.csv"
+     if os.path.exists(file_name):
+        cmd = "rm " + file_name
+        os.system(cmd)
+
      if leap_year(iyear):number_of_day_in_a_month[1] = 29
-     for imonth in range (5,6):
-             #beginDate = year[iyear] + month[imonth] + day[len(number_of_day_in_a_month(imonth) - 1)]
-             beginDate = year[iyear] + month[imonth] + day[0]
-             #endDate = year[iyear] + month[imonth] + day[len(number_of_day_in_a_month(imonth)]
-             endDate = year[iyear] + month[imonth] + day[4]
+     for imonth in range (0,12):
+             beginDate = year[iyear] + month[imonth] + (day[number_of_day_in_a_month[imonth] - 1])
+             #beginDate = year[iyear] + month[imonth] + day[27]
+             endDate = year[iyear] + month[imonth] + str(number_of_day_in_a_month[imonth])
+             #endDate = year[iyear] + month[imonth] + day[28]
              df_water_levels = st_petersburg.get_data(
                begin_date=beginDate,
                end_date=endDate,
@@ -56,6 +58,7 @@ for iyear in range(0,1):
                datum="MLLW",
                units="metric",
                time_zone="gmt")
+             print(df_water_levels)
              df_air_temp = st_petersburg.get_data(
                begin_date=beginDate,
                end_date=endDate,
@@ -108,23 +111,25 @@ for iyear in range(0,1):
                      number_times+= 1
                  df_output = df
      if number_times > 0:
-        df_output.to_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv', index=False, mode='a', float_format='%g')
+        df_output.to_csv('/contrib/Mamoudou.Ba/' + year[iyear] + '_st_petersburg.surge_training.csv', \
+                         index=False, mode='a', float_format='%g')
         print("number_times is",number_times + 1)
-df = pd.read_csv('/contrib/Mamoudou.Ba/st_petersburg_surge_test.csv')
+'''
+df = pd.read_csv('/contrib/Mamoudou.Ba/' + year[iyear] + '_st_petersburg.surge_training.csv')
 #
 #Creating Zarr file
-zarr_file_name = '/contrib/Mamoudou.Ba/zarr_input_data_st_petersburg_surge'
+zarr_file_name = '/contrib/Mamoudou.Ba/zarr_input_data_ft_myers.surge'
 if os.path.exists(zarr_file_name):
     cmd = "rm -rf " + zarr_file_name
     os.system(cmd)
-zarr_file_name = '/contrib/Mamoudou.Ba/zarr_label_data_st_petersburg_surge'
+zarr_file_name = '/contrib/Mamoudou.Ba/zarr_label_data_ft_myers.surge'
 if os.path.exists(zarr_file_name):
     cmd = "rm -rf " + zarr_file_name
     os.system(cmd)
 df_training = zarr.create((number_times,6), chunks=(5,6), dtype=np.float32, store = \
-                           '/contrib/Mamoudou.Ba/zarr_input_data_st_petersburg_surge')
+                           '/contrib/Mamoudou.Ba/zarr_input_data_ft_myers.surge')
 df_label = zarr.create((number_times,6), chunks=(5,6), dtype=np.float32, store = \
-                           '/contrib/Mamoudou.Ba/zarr_label_data_st_petersburg_surge')
+                           '/contrib/Mamoudou.Ba/zarr_label_data_ft_myers.surge')
 string_index = df_winds.index.strftime('%Y-%m-%d %H %M %S')
 for i in range(0,number_times):
     df_training[i, 0] = df.air_temp.values[i]
@@ -133,7 +138,7 @@ for i in range(0,number_times):
     df_training[i, 3] = df.wind_direction.values[i]
     df_training[i, 4] = df.wind_gust.values[i]
     df_training[i, 5] = df.water_level.values[i]
-
+'''
 #removng the csv filee
-#cmd = "rm -f /contrib/Mamoudou.Ba/st_petersburg_surge.csv"
+#cmd = "rm -f /contrib/Mamoudou.Ba/ft_myers.surge.csv"
 #os.sytem(cmd)
